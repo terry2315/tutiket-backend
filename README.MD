@@ -1,59 +1,68 @@
 # Tutiket Backend
 
-Backend inicial para **Tutiket**, una plataforma de e-commerce orientada a la gestión y venta de entradas para conciertos y eventos musicales.
+Backend de **Tutiket**, una plataforma de e-commerce orientada a la gestión y venta de entradas para conciertos y eventos musicales.
 
-Esta versión corresponde a la **Pre-entrega 1 de Backend II** y establece la arquitectura base de la API, la configuración inicial del servidor y las entidades principales `User` y `Event`.
+El proyecto se desarrolla de manera incremental durante las pre-entregas de **Backend II**. Cada nueva etapa evoluciona sobre la arquitectura anterior, manteniendo una separación clara de responsabilidades.
+
+Actualmente se encuentran implementadas:
+
+* ✅ Pre-entrega 1 — Arquitectura base.
+* ✅ Pre-entrega 2 — Registro seguro de usuarios.
 
 ---
 
 ## Temática del proyecto
 
-Tutiket será una plataforma de venta de entradas para conciertos en la que existirán tres tipos principales de usuarios:
+Tutiket será una plataforma de venta de entradas para conciertos en la que existirán tres roles principales:
 
 * **User:** comprador de entradas.
 * **Organizer:** responsable de crear y administrar eventos.
 * **Admin:** administrador general de la plataforma.
 
-En esta primera etapa todavía no se implementan registro, login, compra de entradas ni control de permisos. El objetivo es construir una base arquitectónica sólida y escalable para incorporar esas funcionalidades en las siguientes entregas.
+En el estado actual del proyecto ya existe un flujo seguro de registro de usuarios.
+
+El sistema todavía no implementa login, JWT, cookies, Passport, gestión completa de eventos ni tickets. Estas funcionalidades se incorporarán progresivamente en las siguientes entregas.
 
 ---
 
-## Tecnologías
+# Tecnologías
 
 El proyecto utiliza actualmente:
 
 * **Node.js** — entorno de ejecución para JavaScript.
-* **Express** — framework utilizado para construir la API REST.
-* **Mongoose** — modelado de las entidades que posteriormente serán persistidas en MongoDB.
+* **Express** — framework para construir la API REST.
+* **MongoDB Atlas** — base de datos en la nube.
+* **Mongoose** — modelado y persistencia de documentos MongoDB.
+* **bcrypt** — generación segura de hashes de contraseñas.
 * **dotenv** — manejo de variables de entorno.
-* **Nodemon** — reinicio automático del servidor durante el desarrollo.
+* **Nodemon** — reinicio automático del servidor durante desarrollo.
 * **ES Modules** — utilización de `import` y `export`.
 
 ---
 
-## Instalación
+# Instalación
 
-### 1. Clonar el repositorio
+## 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/terry2315/tutiket-backend.git
 ```
 
-### 2. Ingresar a la carpeta del proyecto
+## 2. Ingresar al proyecto
 
 ```bash
 cd tutiket-backend
 ```
 
-### 3. Instalar las dependencias
+## 3. Instalar las dependencias
 
 ```bash
 npm install
 ```
 
-### 4. Crear el archivo de variables de entorno
+## 4. Crear el archivo de variables de entorno
 
-En la raíz del proyecto crea un archivo:
+En la raíz del proyecto crea:
 
 ```text
 .env
@@ -63,9 +72,9 @@ Puedes utilizar `.env.example` como referencia.
 
 ---
 
-## Variables de entorno
+# Variables de entorno
 
-El archivo `.env.example` contiene las variables necesarias para configurar el proyecto:
+El proyecto utiliza las siguientes variables:
 
 ```env
 PORT=8080
@@ -74,20 +83,26 @@ MONGO_URL=tu_url_de_mongodb
 JWT_SECRET=tu_clave_secreta
 ```
 
-### Variables
+| Variable     | Descripción                                           |
+| ------------ | ----------------------------------------------------- |
+| `PORT`       | Puerto en el que se ejecuta el servidor.              |
+| `NODE_ENV`   | Entorno de ejecución.                                 |
+| `MONGO_URL`  | URI privada de conexión a MongoDB Atlas.              |
+| `JWT_SECRET` | Clave preparada para la futura implementación de JWT. |
 
-| Variable     | Descripción                                                       |
-| ------------ | ----------------------------------------------------------------- |
-| `PORT`       | Puerto en el que se ejecutará el servidor.                        |
-| `NODE_ENV`   | Entorno de ejecución del proyecto.                                |
-| `MONGO_URL`  | URI de conexión a MongoDB. Se utilizará en las siguientes etapas. |
-| `JWT_SECRET` | Clave para firmar JWT. Se utilizará en las siguientes etapas.     |
+> `.env` contiene información privada y está excluido del repositorio mediante `.gitignore`.
 
-> El archivo `.env` contiene valores privados y no debe subirse al repositorio.
+La aplicación utiliza la base de datos:
+
+```text
+tutiket
+```
+
+en MongoDB Atlas.
 
 ---
 
-## Cómo ejecutar
+# Cómo ejecutar
 
 Para iniciar el servidor en modo desarrollo:
 
@@ -95,26 +110,59 @@ Para iniciar el servidor en modo desarrollo:
 npm run dev
 ```
 
-Con la configuración proporcionada en `.env.example`, el servidor estará disponible en:
+Con la configuración actual:
 
 ```text
 http://localhost:8080
 ```
 
-El código también posee un puerto alternativo para los casos en los que `PORT` no esté definido.
+El servidor establece primero la conexión con MongoDB Atlas y posteriormente comienza a escuchar solicitudes HTTP.
+
+Flujo de arranque:
+
+```text
+Variables de entorno
+        ↓
+Conexión MongoDB Atlas
+        ↓
+Servidor Express
+        ↓
+Puerto 8080
+```
 
 ---
 
-## Arquitectura
+# Arquitectura del proyecto
 
-El proyecto está organizado por capas para permitir que pueda crecer durante las próximas entregas.
+La API está organizada mediante una arquitectura por capas.
+
+```text
+Request
+   ↓
+Route
+   ↓
+Controller
+   ↓
+Service
+   ↓
+Repository
+   ↓
+DAO
+   ↓
+Mongoose Model
+   ↓
+MongoDB Atlas
+```
+
+Estructura actual:
 
 ```text
 tutiket-backend/
 │
 ├── src/
+│   │
 │   ├── config/
-│   │   └── .gitkeep
+│   │   └── db.js
 │   │
 │   ├── controllers/
 │   │   ├── events.controller.js
@@ -122,17 +170,16 @@ tutiket-backend/
 │   │   └── sessions.controller.js
 │   │
 │   ├── dao/
-│   │   └── .gitkeep
+│   │   └── users.dao.js
 │   │
 │   ├── middlewares/
-│   │   └── .gitkeep
 │   │
 │   ├── models/
 │   │   ├── Event.js
 │   │   └── User.js
 │   │
 │   ├── repositories/
-│   │   └── .gitkeep
+│   │   └── users.repository.js
 │   │
 │   ├── routes/
 │   │   ├── events.router.js
@@ -140,10 +187,10 @@ tutiket-backend/
 │   │   └── sessions.router.js
 │   │
 │   ├── services/
-│   │   └── .gitkeep
+│   │   └── sessions.service.js
 │   │
 │   ├── utils/
-│   │   └── .gitkeep
+│   │   └── hash.js
 │   │
 │   ├── app.js
 │   └── server.js
@@ -152,52 +199,157 @@ tutiket-backend/
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
-└── README.md
+└── README.MD
 ```
 
-### Responsabilidad de las capas
+---
 
-* **routes:** define las rutas disponibles de la API.
-* **controllers:** recibe las solicitudes HTTP y genera las respuestas.
-* **services:** quedará destinada a la lógica de negocio.
-* **repositories:** funcionará como capa intermedia entre los services y el acceso a datos.
-* **dao:** contendrá posteriormente el acceso directo a la base de datos.
-* **models:** contiene los esquemas principales de Mongoose.
-* **middlewares:** contendrá middlewares reutilizables.
-* **utils:** contendrá funciones auxiliares reutilizables.
-* **config:** contendrá configuraciones como MongoDB y Passport en próximas entregas.
+# Responsabilidad de cada capa
+
+## Routes
+
+Define los endpoints HTTP y delega el procesamiento a los controllers.
+
+Ejemplo:
+
+```text
+POST /api/sessions/register
+        ↓
+sessions.controller.js
+```
+
+Las rutas no contienen lógica de negocio.
 
 ---
 
-## `app.js` y `server.js`
+## Controllers
 
-Las responsabilidades del servidor se encuentran separadas.
+Reciben la solicitud HTTP, llaman al Service correspondiente y construyen la respuesta.
 
-### `app.js`
+El Controller no:
 
-Se encarga de:
-
-* Crear la aplicación Express.
-* Configurar `express.json()`.
-* Montar los routers.
-* Exportar la aplicación.
-
-### `server.js`
-
-Se encarga de:
-
-* Cargar las variables de entorno.
-* Obtener el puerto configurado.
-* Importar la aplicación.
-* Levantar el servidor mediante `app.listen()`.
+* valida reglas de negocio;
+* accede directamente a MongoDB;
+* genera hashes;
+* consulta modelos Mongoose.
 
 ---
 
-## Modelos iniciales
+## Services
 
-### User
+Contienen la lógica de negocio de la aplicación.
 
-El modelo base de usuario contiene:
+Actualmente `sessions.service.js` se encarga de:
+
+* validar campos obligatorios;
+* normalizar el email;
+* validar formato de email;
+* validar longitud mínima de contraseña;
+* detectar emails duplicados;
+* proteger la contraseña con bcrypt;
+* impedir manipulación pública del rol;
+* coordinar la creación del usuario;
+* construir una respuesta segura.
+
+---
+
+## Repositories
+
+Traducen operaciones del dominio a operaciones de acceso a datos.
+
+Actualmente:
+
+```text
+findByEmail(email)
+createUser(data)
+```
+
+El Repository no importa directamente el modelo Mongoose.
+
+---
+
+## DAO
+
+Es la capa que accede directamente al modelo Mongoose.
+
+Actualmente:
+
+```text
+findOne(filter)
+create(data)
+```
+
+El modelo `User` se importa desde esta capa.
+
+---
+
+## Models
+
+Contienen los esquemas Mongoose de las entidades del sistema.
+
+Actualmente:
+
+```text
+User
+Event
+```
+
+---
+
+## Utils
+
+Contiene herramientas reutilizables.
+
+Actualmente:
+
+```text
+hashPassword()
+comparePassword()
+```
+
+implementadas mediante bcrypt.
+
+---
+
+## Config
+
+Contiene configuraciones de infraestructura.
+
+Actualmente:
+
+```text
+db.js
+```
+
+administra la conexión de Mongoose con MongoDB Atlas.
+
+---
+
+# Separación entre `app.js` y `server.js`
+
+## `app.js`
+
+Se encarga de:
+
+* crear la aplicación Express;
+* configurar `express.json()`;
+* montar los routers;
+* exportar la aplicación.
+
+## `server.js`
+
+Se encarga de:
+
+* cargar variables de entorno;
+* conectar MongoDB Atlas;
+* obtener el puerto;
+* levantar el servidor mediante `app.listen()`.
+
+---
+
+# Modelo User
+
+El modelo `User` contiene los siguientes campos:
 
 ```text
 first_name
@@ -207,7 +359,7 @@ password
 role
 ```
 
-Los roles definidos son:
+Roles disponibles:
 
 ```text
 user
@@ -215,17 +367,60 @@ organizer
 admin
 ```
 
-El rol predeterminado es:
+El valor por defecto es:
 
 ```text
 user
 ```
 
-La autenticación y el hash de contraseñas se implementarán en las siguientes etapas.
+El registro público no permite seleccionar `organizer` ni `admin`.
 
-### Event
+---
 
-El modelo base de evento contiene:
+# Seguridad de contraseñas
+
+Las contraseñas nunca se almacenan en texto plano.
+
+El proceso es:
+
+```text
+Contraseña recibida
+        ↓
+bcrypt
+        ↓
+Hash
+        ↓
+MongoDB Atlas
+```
+
+Ejemplo conceptual:
+
+```text
+Secreta123
+        ↓
+$2b$10$...
+```
+
+El helper reutilizable se encuentra en:
+
+```text
+src/utils/hash.js
+```
+
+y contiene:
+
+```text
+hashPassword()
+comparePassword()
+```
+
+`comparePassword()` queda preparado para el flujo de login de una próxima entrega.
+
+---
+
+# Modelo Event
+
+El modelo base de eventos contiene:
 
 ```text
 title
@@ -239,7 +434,7 @@ status
 organizer
 ```
 
-Los estados disponibles son:
+Estados disponibles:
 
 ```text
 draft
@@ -248,19 +443,21 @@ cancelled
 finished
 ```
 
-`organizer` está definido como una referencia `ObjectId` al modelo `User`.
+`organizer` está preparado como referencia `ObjectId` al modelo `User`.
+
+La lógica completa del CRUD de eventos se incorporará en una futura pre-entrega.
 
 ---
 
-## Rutas disponibles
+# Rutas disponibles
 
-### Verificar estado del servidor
+## Health
 
-```http
-GET /api/health
-```
+### GET `/api/health`
 
-Respuesta esperada:
+Verifica que el servidor esté activo.
+
+Respuesta:
 
 ```json
 {
@@ -269,7 +466,7 @@ Respuesta esperada:
 }
 ```
 
-Código HTTP:
+Código:
 
 ```text
 200 OK
@@ -277,15 +474,13 @@ Código HTTP:
 
 ---
 
-### Obtener eventos
+# Events
 
-```http
-GET /api/events
-```
+### GET `/api/events`
 
-En esta primera etapa todavía no existe persistencia en MongoDB, por lo que el endpoint devuelve una lista vacía.
+Actualmente devuelve la estructura inicial del listado de eventos.
 
-Respuesta esperada:
+Respuesta:
 
 ```json
 {
@@ -294,52 +489,318 @@ Respuesta esperada:
 }
 ```
 
-Código HTTP:
+Código:
 
 ```text
 200 OK
 ```
 
+La persistencia y lógica completa de eventos se implementarán posteriormente.
+
 ---
 
-## Sessions
+# Sessions
 
-La arquitectura inicial del recurso `sessions` ya se encuentra preparada mediante:
+## POST `/api/sessions/register`
 
-```text
-src/routes/sessions.router.js
-src/controllers/sessions.controller.js
+Registra un usuario de forma segura.
+
+### Body requerido
+
+```json
+{
+  "first_name": "Ana",
+  "last_name": "Perez",
+  "email": "Ana@Mail.com ",
+  "password": "Secreta123"
+}
 ```
 
-En esta entrega todavía no existen endpoints de autenticación.
+Campos requeridos:
 
-En las próximas etapas se incorporarán progresivamente:
+```text
+first_name
+last_name
+email
+password
+```
+
+El email es normalizado mediante:
+
+```text
+trim + lowercase
+```
+
+Por ejemplo:
+
+```text
+"Ana@Mail.com "
+```
+
+se almacena como:
+
+```text
+ana@mail.com
+```
+
+---
+
+## Registro exitoso
+
+Respuesta:
+
+```text
+201 Created
+```
+
+```json
+{
+  "status": "success",
+  "payload": {
+    "id": "68...",
+    "first_name": "Ana",
+    "last_name": "Perez",
+    "email": "ana@mail.com",
+    "role": "user"
+  }
+}
+```
+
+La respuesta no contiene el campo `password`.
+
+---
+
+## Campos faltantes
+
+Si falta alguno de los campos obligatorios:
+
+```text
+400 Bad Request
+```
+
+```json
+{
+  "status": "error",
+  "message": "Faltan campos obligatorios"
+}
+```
+
+---
+
+## Email inválido
+
+Ejemplo:
+
+```json
+{
+  "first_name": "Carlos",
+  "last_name": "Gomez",
+  "email": "carlosmail.com",
+  "password": "Secreta123"
+}
+```
+
+Respuesta:
+
+```text
+400 Bad Request
+```
+
+```json
+{
+  "status": "error",
+  "message": "El email no tiene un formato válido"
+}
+```
+
+---
+
+## Contraseña demasiado corta
+
+La contraseña debe contener al menos 8 caracteres.
+
+Respuesta:
+
+```text
+400 Bad Request
+```
+
+```json
+{
+  "status": "error",
+  "message": "La contraseña debe tener al menos 8 caracteres"
+}
+```
+
+---
+
+## Email duplicado
+
+Si el email ya existe:
+
+```text
+409 Conflict
+```
+
+```json
+{
+  "status": "error",
+  "message": "El email ya está registrado"
+}
+```
+
+La búsqueda utiliza el email normalizado, por lo que:
+
+```text
+ANA@MAIL.COM
+```
+
+y:
+
+```text
+ana@mail.com
+```
+
+son considerados el mismo email.
+
+---
+
+# Protección del rol
+
+El registro público no permite que el cliente defina su rol.
+
+Por ejemplo, aunque se envíe:
+
+```json
+{
+  "first_name": "Marco",
+  "last_name": "Lopez",
+  "email": "marco@mail.com",
+  "password": "Secreta123",
+  "role": "admin"
+}
+```
+
+el backend ignora ese valor y crea:
+
+```json
+{
+  "role": "user"
+}
+```
+
+Esta regla evita que un usuario pueda escalar privilegios modificando el body de la petición.
+
+---
+
+# Flujo completo del registro
 
 ```text
 POST /api/sessions/register
-POST /api/sessions/login
-GET /api/sessions/current
-POST /api/sessions/logout
+        ↓
+sessions.router.js
+        ↓
+sessions.controller.js
+        ↓
+sessions.service.js
+        ↓
+Validación
+        ↓
+Normalización de email
+        ↓
+Búsqueda de duplicado
+        ↓
+hashPassword()
+        ↓
+users.repository.js
+        ↓
+users.dao.js
+        ↓
+User.js
+        ↓
+MongoDB Atlas
+        ↓
+Respuesta sin password
 ```
 
 ---
 
-## Estado actual del proyecto
+# Casos probados
 
-Esta versión corresponde a la **Pre-entrega 1**.
+Durante la Pre-entrega 2 fueron verificados:
 
-Actualmente se encuentra implementado:
+* ✅ Registro exitoso.
+* ✅ Campos obligatorios faltantes.
+* ✅ Email con formato inválido.
+* ✅ Email duplicado.
+* ✅ Normalización del email.
+* ✅ Contraseña almacenada mediante bcrypt.
+* ✅ Contraseña no expuesta en respuestas.
+* ✅ Intento de registrar `role: "admin"` termina guardando `role: "user"`.
 
-* Servidor Express funcional.
-* Puerto configurable mediante variables de entorno.
-* Arquitectura organizada por capas.
-* Módulos ESM.
-* Endpoint de health.
-* Endpoint inicial de events.
-* Estructura inicial de sessions.
-* Modelo base `User`.
-* Modelo base `Event`.
-* Configuración de variables mediante dotenv.
-* Protección de `.env` y `node_modules` mediante `.gitignore`.
+---
 
-Las siguientes entregas incorporarán progresivamente persistencia en MongoDB, registro seguro de usuarios, autenticación, JWT, cookies HTTP Only, Passport.js, roles, autorización, gestión completa de eventos, tickets, control de cupos y notificaciones.
+# Estado actual del proyecto
+
+## Pre-entrega 1
+
+Completada:
+
+* ✅ servidor Express;
+* ✅ arquitectura base;
+* ✅ health;
+* ✅ estructura inicial de events;
+* ✅ estructura inicial de sessions;
+* ✅ modelos User y Event;
+* ✅ variables de entorno;
+* ✅ ES Modules;
+* ✅ repositorio público GitHub.
+
+## Pre-entrega 2
+
+Completada:
+
+* ✅ conexión MongoDB Atlas;
+* ✅ persistencia mediante Mongoose;
+* ✅ DAO de usuarios;
+* ✅ Repository de usuarios;
+* ✅ Service de registro;
+* ✅ bcrypt;
+* ✅ validaciones;
+* ✅ normalización de email;
+* ✅ detección de duplicados;
+* ✅ registro público seguro;
+* ✅ protección del rol;
+* ✅ respuesta sin contraseña.
+
+---
+
+# Próximas etapas
+
+Las siguientes entregas incorporarán progresivamente:
+
+```text
+Login
+JWT
+Cookies HTTP Only
+/current
+Logout
+Passport.js
+Roles y autorización
+CRUD completo de eventos
+Tickets
+Control de cupos
+Notificaciones
+DTO
+Manejo centralizado de errores
+```
+
+El proyecto continuará evolucionando sobre este mismo repositorio sin comenzar nuevamente desde cero.
+
+---
+
+# Repositorio
+
+```text
+https://github.com/terry2315/tutiket-backend
+```
