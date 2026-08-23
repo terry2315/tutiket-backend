@@ -1,5 +1,6 @@
 import * as userRepository from '../repositories/users.repository.js';
 import { hashPassword } from '../utils/hash.js';
+import { comparePassword } from '../utils/hash.js';
 
 export const registerUser = async (data) => {
     const {
@@ -68,6 +69,52 @@ export const registerUser = async (data) => {
         id: user._id,
         first_name: user.first_name,
         last_name: user.last_name,
+        email: user.email,
+        role: user.role
+    };
+};
+
+export const loginUser = async (data) => {
+    const { email, password } = data;
+
+    // 1. Validar presencia de credenciales
+    if (!email || !password) {
+        const error = new Error('Email y contraseña son obligatorios');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // 2. Normalizar email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 3. Buscar usuario incluyendo excepcionalmente el password
+    const user = await userRepository.findByEmailWithPassword(
+        normalizedEmail
+    );
+
+    // 4. Mensaje genérico si el usuario no existe
+    if (!user) {
+        const error = new Error('Credenciales inválidas');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // 5. Comparar password recibido con hash almacenado
+    const passwordMatch = await comparePassword(
+        password,
+        user.password
+    );
+
+    // 6. Mismo mensaje si el password es incorrecto
+    if (!passwordMatch) {
+        const error = new Error('Credenciales inválidas');
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // 7. Retornar exclusivamente los datos necesarios para el JWT
+    return {
+        id: user._id,
         email: user.email,
         role: user.role
     };
