@@ -1,18 +1,24 @@
 import jwt from 'jsonwebtoken';
+import ms from 'ms';
+
+const getExpiresIn = () => {
+    return process.env.JWT_EXPIRES_IN || '1h';
+};
 
 export const generateToken = (payload) => {
     return jwt.sign(
         payload,
         process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_EXPIRES_IN
-        }
+        { expiresIn: getExpiresIn() }
     );
 };
 
-export const verifyToken = (token) => {
-    return jwt.verify(
-        token,
-        process.env.JWT_SECRET
-    );
+export const getJwtCookieMaxAge = () => {
+    const maxAge = ms(getExpiresIn());
+
+    if (typeof maxAge !== 'number') {
+        throw new Error('JWT_EXPIRES_IN tiene un formato inválido');
+    }
+
+    return maxAge;
 };

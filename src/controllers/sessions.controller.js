@@ -1,31 +1,18 @@
-import { registerUser, loginUser } from '../services/sessions.service.js';
-import { generateToken } from '../utils/jwt.js';
+import {
+    generateToken,
+    getJwtCookieMaxAge
+} from '../utils/jwt.js';
 
-export const register = async (req, res) => {
-    try {
-        const user = await registerUser(req.body);
-
-        return res.status(201).json({
-            status: 'success',
-            payload: user
-        });
-
-    } catch (error) {
-        const statusCode = error.statusCode || 500;
-
-        return res.status(statusCode).json({
-            status: 'error',
-            message:
-                statusCode === 500
-                    ? 'Error interno del servidor'
-                    : error.message
-        });
-    }
+export const register = (req, res) => {
+    return res.status(201).json({
+        status: 'success',
+        payload: req.user
+    });
 };
 
-export const login = async (req, res) => {
+export const login = (req, res) => {
     try {
-        const user = await loginUser(req.body);
+        const user = req.user;
 
         const token = generateToken({
             id: user.id,
@@ -36,7 +23,7 @@ export const login = async (req, res) => {
         res.cookie('currentUser', token, {
             httpOnly: true,
             sameSite: 'lax',
-            maxAge: 3600000,
+            maxAge: getJwtCookieMaxAge(),
             secure: process.env.NODE_ENV === 'production'
         });
 
@@ -46,14 +33,9 @@ export const login = async (req, res) => {
         });
 
     } catch (error) {
-        const statusCode = error.statusCode || 500;
-
-        return res.status(statusCode).json({
+        return res.status(500).json({
             status: 'error',
-            message:
-                statusCode === 500
-                    ? 'Error interno del servidor'
-                    : error.message
+            message: 'Error interno del servidor'
         });
     }
 };
