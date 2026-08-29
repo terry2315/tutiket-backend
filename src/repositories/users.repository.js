@@ -1,4 +1,3 @@
-
 import * as userDao from '../dao/users.dao.js';
 
 export const findByEmail = async (email) => {
@@ -7,6 +6,10 @@ export const findByEmail = async (email) => {
 
 export const findByEmailWithPassword = async (email) => {
     return await userDao.findOneWithPassword({ email });
+};
+
+export const findAllUsers = async () => {
+    return await userDao.findAll();
 };
 
 export const createUser = async (data) => {

@@ -1,6 +1,7 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
+import adminRouter from './routes/admin.router.js';
 
 import { initializePassport } from './config/passport.config.js';
 
@@ -19,5 +20,6 @@ app.use(passport.initialize());
 app.use('/api', healthRouter);
 app.use('/api', eventsRouter);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/admin', adminRouter);
 
 export default app;

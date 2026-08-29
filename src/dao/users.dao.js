@@ -8,7 +8,10 @@ export const findOneWithPassword = async (filter) => {
     return await User.findOne(filter).select('+password');
 };
 
+export const findAll = async () => {
+    return await User.find();
+};
+
 export const create = async (data) => {
     return await User.create(data);
 };
-
