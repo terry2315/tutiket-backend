@@ -1,18 +1,19 @@
 import express from 'express';
-
 import {
     getEvents,
+    getEventById,
     createEvent,
-    updateEvent
+    updateEvent,
+    changeEventStatus
 } from '../controllers/events.controller.js';
 
 import { auth } from '../middlewares/auth.middleware.js';
 import { authorize } from '../middlewares/authorize.middleware.js';
-import { authorizeEventOwner } from '../middlewares/event-owner.middleware.js';
 
 const router = express.Router();
 
 router.get('/events', getEvents);
+router.get('/events/:id', getEventById);
 
 router.post(
     '/events',
@@ -21,12 +22,18 @@ router.post(
     createEvent
 );
 
-router.patch(
-    '/events/:eid',
+router.put(
+    '/events/:id',
     auth,
     authorize('organizer', 'admin'),
-    authorizeEventOwner,
     updateEvent
+);
+
+router.patch(
+    '/events/:id/status',
+    auth,
+    authorize('organizer', 'admin'),
+    changeEventStatus
 );
 
 export default router;

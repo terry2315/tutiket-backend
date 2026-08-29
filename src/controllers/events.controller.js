@@ -1,118 +1,58 @@
-import Event from '../models/Event.js';
+import * as eventService from '../services/events.services.js';
 
-export const getEvents = (req, res) => {
-    return res.status(200).json({
-        status: 'success',
-        payload: []
+const handleError = (res, error) => {
+    return res.status(error.statusCode || 500).json({
+        status: 'error',
+        message: error.statusCode ? error.message : 'Error interno del servidor'
     });
+};
+
+export const getEvents = async (req, res) => {
+    try {
+        const result = await eventService.getEvents(req.query);
+        return res.status(200).json(result);
+    } catch (error) {
+        return handleError(res, error);
+    }
+};
+
+export const getEventById = async (req, res) => {
+    try {
+        const event = await eventService.getEventById(req.params.id);
+        return res.status(200).json({ status: 'success', payload: event });
+    } catch (error) {
+        return handleError(res, error);
+    }
 };
 
 export const createEvent = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            category,
-            date,
-            location,
-            capacity,
-            price,
-            status
-        } = req.body;
-
-        const event = await Event.create({
-            title,
-            description,
-            category,
-            date,
-            location,
-            capacity,
-            price,
-            status,
-            organizer: req.user.id
-        });
-
-        return res.status(201).json({
-            status: 'success',
-            payload: {
-                id: event._id,
-                title: event.title,
-                description: event.description,
-                category: event.category,
-                date: event.date,
-                location: event.location,
-                capacity: event.capacity,
-                price: event.price,
-                status: event.status,
-                organizer: event.organizer
-            }
-        });
-
+        const event = await eventService.createEvent(req.body, req.user);
+        return res.status(201).json({ status: 'success', payload: event });
     } catch (error) {
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                status: 'error',
-                message: error.message
-            });
-        }
-
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error interno del servidor'
-        });
+        return handleError(res, error);
     }
 };
 
 export const updateEvent = async (req, res) => {
     try {
-        const event = req.event;
-
-        const allowedFields = [
-            'title',
-            'description',
-            'category',
-            'date',
-            'location',
-            'capacity',
-            'price',
-            'status'
-        ];
-
-        for (const field of allowedFields) {
-            if (req.body[field] !== undefined) {
-                event[field] = req.body[field];
-            }
-        }
-
-        await event.save();
-
-        return res.status(200).json({
-            status: 'success',
-            payload: {
-                id: event._id,
-                title: event.title,
-                description: event.description,
-                category: event.category,
-                date: event.date,
-                location: event.location,
-                capacity: event.capacity,
-                price: event.price,
-                status: event.status,
-                organizer: event.organizer
-            }
-        });
-
+        const event = await eventService.updateEvent(req.params.id, req.body, req.user);
+        return res.status(200).json({ status: 'success', payload: event });
     } catch (error) {
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                status: 'error',
-                message: error.message
-            });
-        }
+        return handleError(res, error);
+    }
+};
 
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error interno del servidor'
-        });
+export const changeEventStatus = async (req, res) => {
+    try {
+        const event = await eventService.changeEventStatus(
+            req.params.id,
+            req.body.status,
+            req.user
+        );
+
+        return res.status(200).json({ status: 'success', payload: event });
+    } catch (error) {
+        return handleError(res, error);
     }
 };
