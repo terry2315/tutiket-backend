@@ -1,47 +1,38 @@
-# Tutiket Backend
+Tutiket Backend
 
-Backend de **Tutiket**, plataforma de venta de entradas para eventos.
+Backend de Tutiket, plataforma de venta de entradas para eventos.
 
-## Estado
+Estado
 
-- ✅ Pre-entrega 1 — Arquitectura base
-- ✅ Pre-entrega 2 — Registro seguro
-- ✅ Pre-entrega 3 — JWT, cookies y sesión
-- ✅ Pre-entrega 4 — Passport.js
-- ✅ Pre-entrega 5 — Roles y autorización
-- ✅ Pre-entrega 6 — Events y lógica de negocio
+✅ Pre-entrega 1 — Arquitectura base
 
-## Stack
+✅ Pre-entrega 2 — Registro seguro
 
-Node.js · Express · MongoDB Atlas · Mongoose · Passport.js · JWT · bcrypt · cookie-parser
+✅ Pre-entrega 3 — JWT, cookies y sesión
 
-## Arquitectura
+✅ Pre-entrega 4 — Passport.js
 
-```text
+✅ Pre-entrega 5 — Roles y autorización
+
+✅ Pre-entrega 6 — Events y lógica de negocio
+
+✅ Pre-entrega 7 — Tickets, inscripciones y control de cupos
+
+Stack
+
+Node.js · Express · MongoDB Atlas · Mongoose · Passport.js · JWT · bcrypt · cookie-parser · Nodemailer
+
+Arquitectura
+
 Route → Middleware → Controller → Service → Repository → DAO → MongoDB
-```
 
-La lógica de negocio de eventos vive en `services`; el acceso a datos en `repositories` y `dao`.
+La lógica de negocio vive en services; el acceso a datos en repositories y dao.
 
-## Roles y permisos
+Roles
 
-| Acción | user | organizer | admin |
-|---|---:|---:|---:|
-| Consultar eventos | ✅ | ✅ | ✅ |
-| Crear eventos | ❌ | ✅ | ✅ |
-| Modificar evento propio | ❌ | ✅ | ✅ |
-| Modificar evento ajeno | ❌ | ❌ | ✅ |
-| Ver usuarios | ❌ | ❌ | ✅ |
+user · organizer · admin
 
-El registro público siempre crea `role: "user"`.
-
-## Rutas
-
-```text
-POST  /api/sessions/register
-POST  /api/sessions/login
-GET   /api/sessions/current
-POST  /api/sessions/logout
+Eventos
 
 POST  /api/events              → organizer | admin
 GET   /api/events              → público
@@ -49,118 +40,119 @@ GET   /api/events/:id          → público
 PUT   /api/events/:id          → dueño | admin
 PATCH /api/events/:id/status   → dueño | admin
 
-GET   /api/admin/users         → admin
-```
+Estados:
 
-## Eventos
-
-Campos principales:
-
-```text
-title · description · category · date · location
-capacity · price · status · organizer
-```
-
-`organizer` es un `ObjectId` con referencia a `User` y se asigna desde `req.user.id`.
-
-Estados válidos:
-
-```text
 draft · published · cancelled · finished
-```
 
-Reglas principales:
+Tickets
 
-- fecha futura al crear;
-- `capacity > 0`;
-- `price >= 0`;
-- `organizer` no puede venir del body;
-- `organizer` solo modifica eventos propios;
-- `admin` puede modificar cualquiera;
-- `cancelled` no puede modificarse ni cambiar nuevamente de estado;
-- `finished` no puede volver a `published`;
-- cancelar no elimina el evento: cambia `status` a `cancelled`.
+Modelo:
 
-## Filtros y paginación
+user · event · status · quantity · reservationCode · cancelledAt
 
-`GET /api/events` soporta:
+user y event son referencias ObjectId.
 
-```text
-status · category · location · dateFrom · dateTo · page · limit · sort
-```
+Estados:
 
-Ejemplo:
+confirmed · pending · cancelled
 
-```http
-GET /api/events?status=published&category=workshop&page=1&limit=5&sort=date
-```
+Rutas:
 
-Respuesta:
+POST  /api/events/:eid/tickets → autenticado
+GET   /api/tickets/my-tickets  → autenticado
+GET   /api/events/:eid/tickets → organizer dueño | admin
+PATCH /api/tickets/:tid/cancel → dueño del ticket | admin
 
-```json
-{
-  "data": [],
-  "page": 1,
-  "limit": 5,
-  "total": 0,
-  "totalPages": 0
-}
-```
+Flujo de inscripción
 
-## Autenticación y autorización
+evento existe
+→ status = published
+→ quantity > 0
+→ sin ticket activo duplicado
+→ calcular cupos
+→ crear ticket confirmed
+→ generar reservationCode
+→ enviar email
 
-```text
+Regla de cupos:
+
+disponibles = event.capacity - SUM(quantity de confirmed + pending)
+
+Los tickets cancelled no ocupan cupo.
+
+Cancelación
+
+status = cancelled
+cancelledAt = fecha actual
+
+El ticket no se elimina. Al quedar cancelled, el cupo se libera automáticamente.
+
+Mis tickets
+
+GET /api/tickets/my-tickets
+
+Incluye mediante populate:
+
+event.title
+event.date
+event.location
+
+Autenticación y autorización
+
 sin sesión válida → 401
 sesión válida sin permiso → 403
-```
 
-JWT se almacena en la cookie HttpOnly `currentUser`.
+Email
 
-## Variables de entorno
+Nodemailer envía confirmación al crear una inscripción.
 
-```env
+Variables:
+
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=tu_correo
+MAIL_PASS=tu_password_de_aplicacion
+MAIL_FROM="Tutiket <tu_correo>"
+
+También:
+
 PORT=8080
 NODE_ENV=development
 MONGO_URI=tu_url_de_mongodb
 JWT_SECRET=tu_clave_secreta
 JWT_EXPIRES_IN=1h
-```
 
-`.env` no se versiona.
+.env no se versiona.
 
-## Ejecución
+Ejecución
 
-```bash
 npm install
 npm run dev
-```
 
-Servidor: `http://localhost:8080`
+Servidor: http://localhost:8080
 
-## Pre-entrega 6 — pruebas
+Pre-entrega 7 — pruebas
 
-```text
-✅ fecha pasada → 400
-✅ capacity: 0 → 400
-✅ price < 0 → 400
-✅ creación válida → 201
-✅ paginación + sort → 200
-✅ filtros → 200
-✅ detalle por id → 200
+✅ inscripción exitosa + email
+✅ duplicado activo → 409
+✅ sin sesión → 401
 ✅ evento inexistente → 404
-✅ organizer modifica propio → 200
-✅ organizer modifica ajeno → 403
-✅ admin modifica ajeno → 200
-✅ draft → published → 200
-✅ published → cancelled → 200
-✅ cancelled cambia estado → 400
-✅ cancelled se modifica → 400
-```
+✅ evento cancelado → 400
+✅ sin cupos → 400
+✅ cancelación propia → 200
+✅ cancelación libera cupo → nueva inscripción 201
+✅ cancelar ticket ajeno → 403
+✅ user consulta tickets de evento → 403
+✅ organizer ajeno consulta tickets → 403
+✅ organizer dueño consulta tickets → 200
+✅ my-tickets + populate → 200
+✅ quantity 0 → 400
+✅ admin consulta tickets → 200
 
-## Repositorio
+Repositorio
 
 https://github.com/terry2315/tutiket-backend
 
-## Autor
+Autor
 
-**Terry Guzman**
+Terry Guzman
