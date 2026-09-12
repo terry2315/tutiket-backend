@@ -60,10 +60,7 @@ export const createTicket = async (eventId, quantity, user) => {
     const availableCapacity = event.capacity - reservedQuantity;
 
     if (availableCapacity < quantity) {
-        throw createError(
-            `Cupos insuficientes. Disponibles: ${availableCapacity}`,
-            400
-        );
+        throw createError(`Cupos insuficientes. Disponibles: ${availableCapacity}`, 409);
     }
 
     const ticket = await ticketRepository.createTicket({

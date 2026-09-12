@@ -25,6 +25,7 @@ export const toEventsDTO = (events) => {
 };
 
 export const toPaginatedEventsDTO = (result) => ({
+    status: 'success',
     data: toEventsDTO(result.data),
     page: result.page,
     limit: result.limit,
