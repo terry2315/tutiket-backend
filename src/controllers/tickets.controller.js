@@ -1,15 +1,11 @@
 import * as ticketService from '../services/tickets.services.js';
 
-const handleError = (res, error) => {
-    return res.status(error.statusCode || 500).json({
-        status: 'error',
-        message: error.statusCode
-            ? error.message
-            : 'Error interno del servidor'
-    });
-};
+import {
+    toTicketDTO,
+    toTicketsDTO
+} from '../dto/ticket.dto.js';
 
-export const createTicket = async (req, res) => {
+export const createTicket = async (req, res, next) => {
     try {
         const ticket = await ticketService.createTicket(
             req.params.eid,
@@ -19,27 +15,29 @@ export const createTicket = async (req, res) => {
 
         return res.status(201).json({
             status: 'success',
-            payload: ticket
+            payload: toTicketDTO(ticket)
         });
     } catch (error) {
-        return handleError(res, error);
+        next(error);
     }
 };
 
-export const getMyTickets = async (req, res) => {
+export const getMyTickets = async (req, res, next) => {
     try {
-        const tickets = await ticketService.getMyTickets(req.user.id);
+        const tickets = await ticketService.getMyTickets(
+            req.user.id
+        );
 
         return res.status(200).json({
             status: 'success',
-            payload: tickets
+            payload: toTicketsDTO(tickets)
         });
     } catch (error) {
-        return handleError(res, error);
+        next(error);
     }
 };
 
-export const getEventTickets = async (req, res) => {
+export const getEventTickets = async (req, res, next) => {
     try {
         const tickets = await ticketService.getEventTickets(
             req.params.eid,
@@ -48,14 +46,14 @@ export const getEventTickets = async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            payload: tickets
+            payload: toTicketsDTO(tickets)
         });
     } catch (error) {
-        return handleError(res, error);
+        next(error);
     }
 };
 
-export const cancelTicket = async (req, res) => {
+export const cancelTicket = async (req, res, next) => {
     try {
         const ticket = await ticketService.cancelTicket(
             req.params.tid,
@@ -64,9 +62,9 @@ export const cancelTicket = async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            payload: ticket
+            payload: toTicketDTO(ticket)
         });
     } catch (error) {
-        return handleError(res, error);
+        next(error);
     }
 };

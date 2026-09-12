@@ -4,12 +4,7 @@ import { sendTicketConfirmation } from './mail.services.js';
 
 import * as ticketRepository from '../repositories/tickets.repositories.js';
 import * as eventRepository from '../repositories/events.repository.js';
-
-const createError = (message, statusCode) => {
-    const error = new Error(message);
-    error.statusCode = statusCode;
-    return error;
-};
+import { createError } from '../utils/app.error.js';
 
 const validateId = (id, entity = 'recurso') => {
     if (!mongoose.Types.ObjectId.isValid(id)) {

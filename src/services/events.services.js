@@ -1,13 +1,8 @@
 import mongoose from 'mongoose';
 import * as eventRepository from '../repositories/events.repository.js';
+import { createError } from '../utils/app.error.js';
 
 const VALID_STATUS = ['draft', 'published', 'cancelled', 'finished'];
-
-const createError = (message, statusCode) => {
-    const error = new Error(message);
-    error.statusCode = statusCode;
-    return error;
-};
 
 const validateEventId = (id) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {

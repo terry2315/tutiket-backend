@@ -3,16 +3,21 @@ import {
     getJwtCookieMaxAge
 } from '../utils/jwt.js';
 
+import {
+    toAuthUserDTO,
+    toUserDTO
+} from '../dto/user.dto.js';
+
 export const register = (req, res) => {
     return res.status(201).json({
         status: 'success',
-        payload: req.user
+        payload: toUserDTO(req.user)
     });
 };
 
-export const login = (req, res) => {
+export const login = (req, res, next) => {
     try {
-        const user = req.user;
+        const user = toAuthUserDTO(req.user);
 
         const token = generateToken({
             id: user.id,
@@ -31,23 +36,15 @@ export const login = (req, res) => {
             status: 'success',
             message: 'Login correcto'
         });
-
     } catch (error) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error interno del servidor'
-        });
+        next(error);
     }
 };
 
 export const current = (req, res) => {
     return res.status(200).json({
         status: 'success',
-        payload: {
-            id: req.user.id,
-            email: req.user.email,
-            role: req.user.role
-        }
+        payload: toAuthUserDTO(req.user)
     });
 };
 

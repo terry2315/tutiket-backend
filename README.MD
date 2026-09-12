@@ -1,8 +1,8 @@
-Tutiket Backend
+# Tutiket Backend
 
-Backend de Tutiket, plataforma de venta de entradas para eventos.
+Backend de **Tutiket**, plataforma de venta de entradas para eventos.
 
-Estado
+## Estado
 
 ✅ Pre-entrega 1 — Arquitectura base
 
@@ -18,53 +18,112 @@ Estado
 
 ✅ Pre-entrega 7 — Tickets, inscripciones y control de cupos
 
-Stack
+✅ Pre-entrega 8 — Arquitectura con DAO, Repository y DTO
+
+## Stack
 
 Node.js · Express · MongoDB Atlas · Mongoose · Passport.js · JWT · bcrypt · cookie-parser · Nodemailer
 
-Arquitectura
+## Arquitectura
 
-Route → Middleware → Controller → Service → Repository → DAO → MongoDB
+```text
+Route
+→ Middleware
+→ Controller
+→ Service
+→ Repository
+→ DAO
+→ Mongoose Model
+→ MongoDB
+```
 
-La lógica de negocio vive en services; el acceso a datos en repositories y dao.
+Responsabilidades:
 
-Roles
+```text
+Controller → request / response
+Service → lógica de negocio
+Repository → operaciones de dominio
+DAO → acceso directo a Mongoose
+DTO → controla los datos expuestos
+```
 
+Los modelos de Mongoose solo son importados por los DAO.
+
+Los services consumen repositories y los controllers consumen services.
+
+## DTO
+
+La API utiliza DTO para controlar las respuestas de:
+
+```text
+User
+Event
+Ticket
+```
+
+Esto evita exponer datos internos o sensibles.
+
+`password` nunca se devuelve en las respuestas.
+
+Los tickets con `populate` solo exponen del evento:
+
+```text
+event._id
+event.title
+event.date
+event.location
+```
+
+## Roles
+
+```text
 user · organizer · admin
+```
 
-Eventos
+## Eventos
 
+```text
 POST  /api/events              → organizer | admin
 GET   /api/events              → público
 GET   /api/events/:id          → público
 PUT   /api/events/:id          → dueño | admin
 PATCH /api/events/:id/status   → dueño | admin
+```
 
 Estados:
 
+```text
 draft · published · cancelled · finished
+```
 
-Tickets
+## Tickets
 
 Modelo:
 
+```text
 user · event · status · quantity · reservationCode · cancelledAt
+```
 
-user y event son referencias ObjectId.
+`user` y `event` son referencias `ObjectId`.
 
 Estados:
 
+```text
 confirmed · pending · cancelled
+```
 
 Rutas:
 
+```text
 POST  /api/events/:eid/tickets → autenticado
 GET   /api/tickets/my-tickets  → autenticado
 GET   /api/events/:eid/tickets → organizer dueño | admin
 PATCH /api/tickets/:tid/cancel → dueño del ticket | admin
+```
 
-Flujo de inscripción
+## Flujo de inscripción
 
+```text
 evento existe
 → status = published
 → quantity > 0
@@ -73,86 +132,156 @@ evento existe
 → crear ticket confirmed
 → generar reservationCode
 → enviar email
+```
 
 Regla de cupos:
 
-disponibles = event.capacity - SUM(quantity de confirmed + pending)
+```text
+disponibles =
+event.capacity -
+SUM(quantity de confirmed + pending)
+```
 
-Los tickets cancelled no ocupan cupo.
+Los tickets `cancelled` no ocupan cupo.
 
-Cancelación
+## Cancelación
 
+```text
 status = cancelled
 cancelledAt = fecha actual
+```
 
-El ticket no se elimina. Al quedar cancelled, el cupo se libera automáticamente.
+El ticket no se elimina.
 
-Mis tickets
+Al quedar `cancelled`, el cupo se libera automáticamente.
 
+## Mis tickets
+
+```text
 GET /api/tickets/my-tickets
+```
 
-Incluye mediante populate:
+Incluye mediante `populate` y DTO:
 
+```text
+event._id
 event.title
 event.date
 event.location
+```
 
-Autenticación y autorización
+## Autenticación y autorización
 
+```text
 sin sesión válida → 401
 sesión válida sin permiso → 403
+```
 
-Email
+`GET /api/sessions/current` devuelve únicamente:
+
+```text
+id
+email
+role
+```
+
+Nunca devuelve `password`.
+
+## Manejo de errores
+
+Los errores de negocio se envían mediante:
+
+```text
+Service
+→ throw createError()
+→ Controller
+→ next(error)
+→ errorHandler
+```
+
+Códigos utilizados:
+
+```text
+400 → datos o regla de negocio inválida
+401 → no autenticado
+403 → sin permisos
+404 → recurso no encontrado
+409 → conflicto
+500 → error interno
+```
+
+## Email
 
 Nodemailer envía confirmación al crear una inscripción.
 
 Variables:
 
+```env
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USER=tu_correo
 MAIL_PASS=tu_password_de_aplicacion
 MAIL_FROM="Tutiket <tu_correo>"
+```
 
 También:
 
+```env
 PORT=8080
 NODE_ENV=development
 MONGO_URI=tu_url_de_mongodb
 JWT_SECRET=tu_clave_secreta
 JWT_EXPIRES_IN=1h
+```
 
-.env no se versiona.
+`.env` no se versiona.
 
-Ejecución
+## Ejecución
 
+```bash
 npm install
 npm run dev
+```
 
-Servidor: http://localhost:8080
+Servidor:
 
-Pre-entrega 7 — pruebas
+```text
+http://localhost:8080
+```
 
-✅ inscripción exitosa + email
-✅ duplicado activo → 409
+## Pre-entrega 8 — pruebas
+
+```text
+✅ modelos Mongoose importados solo por DAO
+✅ repositories consumen DAO
+✅ services consumen repositories
+✅ controllers consumen services
+✅ User DTO funcionando
+✅ Event DTO funcionando
+✅ Ticket DTO funcionando
+✅ populate filtrado mediante DTO
+✅ /current no expone password
+✅ middleware centralizado de errores
+✅ datos inválidos → 400
 ✅ sin sesión → 401
-✅ evento inexistente → 404
-✅ evento cancelado → 400
-✅ sin cupos → 400
-✅ cancelación propia → 200
-✅ cancelación libera cupo → nueva inscripción 201
-✅ cancelar ticket ajeno → 403
-✅ user consulta tickets de evento → 403
-✅ organizer ajeno consulta tickets → 403
-✅ organizer dueño consulta tickets → 200
-✅ my-tickets + populate → 200
-✅ quantity 0 → 400
-✅ admin consulta tickets → 200
+✅ sin permisos → 403
+✅ recurso inexistente → 404
+✅ conflicto → 409
+✅ registro → 201
+✅ login → 200
+✅ current → 200
+✅ organizer crea evento → 201
+✅ evento draft → published
+✅ inscripción → 201
+✅ consulta de tickets → 200
+✅ cancelación de ticket → 200
+✅ flujo completo funciona después del refactor
+```
 
-Repositorio
+## Repositorio
 
 https://github.com/terry2315/tutiket-backend
 
-Autor
+## Autor
 
-Terry Guzman
+**Terry Guzman**

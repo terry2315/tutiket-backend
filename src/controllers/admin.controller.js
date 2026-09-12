@@ -1,26 +1,15 @@
-import * as userRepository from '../repositories/users.repository.js';
+import { getAllUsers } from '../services/user.services.js';
+import { toUsersDTO } from '../dto/user.dto.js';
 
-export const getUsers = async (req, res) => {
+export const getUsers = async (req, res, next) => {
     try {
-        const users = await userRepository.findAllUsers();
-
-        const safeUsers = users.map((user) => ({
-            id: user._id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            email: user.email,
-            role: user.role
-        }));
+        const users = await getAllUsers();
 
         return res.status(200).json({
             status: 'success',
-            payload: safeUsers
+            payload: toUsersDTO(users)
         });
-
     } catch (error) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error interno del servidor'
-        });
+        next(error);
     }
 };
